@@ -11,7 +11,9 @@ import random
 import argparse
 import subprocess
 import logging
+import threading
 from dotenv import load_dotenv
+from modules.trigger_listener import EmailTriggerListener
 
 # Load config
 load_dotenv()
@@ -131,6 +133,38 @@ def run_pipeline():
         return False
 
 
+def start_trigger_thread():
+    """Start listening for 'upload new video' emails in background."""
+    def _listener_loop():
+        listener = EmailTriggerListener()
+        if not listener.connect():
+            logger.warning("Email trigger inactive (check credentials).")
+            return
+
+        logger.info("📧 Email Trigger Active: Listening for 'upload new video'...")
+        while True:
+            try:
+                triggered, sender = listener.check_for_trigger()
+                if triggered:
+                    logger.info(f"📧 Trigger received from {sender}!")
+                    listener.send_reply(sender, "Video Generation Started", "I'm on it! Creating a new video now...")
+                    
+                    success = run_pipeline()
+                    
+                    if success:
+                        listener.send_reply(sender, "Video Uploaded ✅", "Your video is live! Check the channel.")
+                    else:
+                        listener.send_reply(sender, "Video Failed ❌", "Something went wrong. Check logs.")
+                
+            except Exception as e:
+                logger.error(f"Trigger listener error: {e}")
+            
+            time.sleep(60) # check every minute
+
+    t = threading.Thread(target=_listener_loop, daemon=True)
+    t.start()
+
+
 def main():
     parser = argparse.ArgumentParser(description="YouTube Automation Scheduler")
     parser.add_argument("--once", action="store_true", help="Run once immediately")
@@ -139,6 +173,9 @@ def main():
     logger.info("🕐 Scheduler Started")
     logger.info(f"   Daily Goal: {DAILY_COUNT} videos")
     logger.info(f"   Window: {START_HOUR}:00 - {END_HOUR}:00 IST (Local Time)")
+
+    # Start email trigger listener
+    start_trigger_thread()
 
     if args.once:
         run_pipeline()
