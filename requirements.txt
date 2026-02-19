@@ -1,0 +1,12 @@
+google-genai>=1.0.0
+edge-tts>=6.1.0
+moviepy>=2.0.0
+Pillow>=10.0.0
+google-api-python-client>=2.100.0
+google-auth-httplib2>=0.1.1
+google-auth-oauthlib>=1.1.0
+python-dotenv>=1.0.0
+openpyxl>=3.1.0
+numpy>=1.24.0
+requests>=2.31.0
+bytez>=3.0.0

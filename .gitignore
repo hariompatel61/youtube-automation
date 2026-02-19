@@ -1,0 +1,31 @@
+# ============================================
+# Git Ignore — Protect secrets & unnecessary files
+# ============================================
+
+# Secrets & credentials
+.env
+Client_secret.json
+client_secret.json
+youtube_token.pickle
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Generated output
+output/
+logs/
+content_log.xlsx
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store

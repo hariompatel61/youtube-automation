@@ -1,0 +1,109 @@
+# GitHub Actions workflow for automated YouTube Shorts generation
+# Runs daily for FREE on GitHub's infrastructure
+# Free tier: 2,000 minutes/month for private repos, unlimited for public repos
+
+name: 🎬 Auto Generate YouTube Short
+
+on:
+  # Run daily at 7:50 AM UTC (1:20 PM IST)
+  schedule:
+    - cron: '50 7 * * *'
+  
+  # Manual trigger from GitHub UI
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Custom topic (optional)'
+        required: false
+        type: string
+      upload:
+        description: 'Upload to YouTube'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  generate-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 🔧 Set up environment
+        run: |
+          echo "LLM_PROVIDER=${{ secrets.LLM_PROVIDER || 'groq' }}" >> .env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
+          echo "GROQ_MODEL=${{ secrets.GROQ_MODEL || 'llama-3.3-70b-versatile' }}" >> .env
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
+          echo "VIDEO_DURATION=30" >> .env
+          echo "VIDEO_WIDTH=1080" >> .env
+          echo "VIDEO_HEIGHT=1920" >> .env
+          echo "VIDEO_FPS=24" >> .env
+          echo "NARRATOR_VOICE=en-US-GuyNeural" >> .env
+          echo "CHARACTER_VOICE_MALE=en-US-ChristopherNeural" >> .env
+          echo "CHARACTER_VOICE_FEMALE=en-US-JennyNeural" >> .env
+          echo "YOUTUBE_CATEGORY=23" >> .env
+          echo "MADE_FOR_KIDS=false" >> .env
+          echo "PLAYLIST_ID=${{ secrets.PLAYLIST_ID }}" >> .env
+
+      - name: 🔑 Restore YouTube token
+        if: env.YOUTUBE_TOKEN != ''
+        env:
+          YOUTUBE_TOKEN: ${{ secrets.YOUTUBE_TOKEN_BASE64 }}
+        run: |
+          echo "$YOUTUBE_TOKEN" | base64 -d > youtube_token.pickle
+
+      - name: 🔑 Restore client secret
+        if: env.CLIENT_SECRET != ''
+        env:
+          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_JSON }}
+        run: |
+          echo "$CLIENT_SECRET" > Client_secret.json
+
+      - name: 🎬 Run pipeline (steps 1-9 only)
+        if: ${{ !github.event.inputs.upload || github.event.inputs.upload == 'false' }}
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.topic }}" ]; then
+            ARGS="--topic '${{ github.event.inputs.topic }}'"
+          fi
+          python main.py $ARGS
+
+      - name: 🎬 Run pipeline (with YouTube upload)
+        if: ${{ github.event.inputs.upload == 'true' || github.event_name == 'schedule' }}
+        run: |
+          ARGS="--auto"
+          if [ -n "${{ github.event.inputs.topic }}" ]; then
+            ARGS="$ARGS --topic '${{ github.event.inputs.topic }}'"
+          fi
+          python main.py $ARGS
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: youtube-short-${{ github.run_number }}
+          path: |
+            output/run_*/
+          retention-days: 7
+
+      - name: 📊 Upload Excel log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: content-log-${{ github.run_number }}
+          path: content_log.xlsx
+          retention-days: 30
