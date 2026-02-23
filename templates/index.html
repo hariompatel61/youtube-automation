@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Automation Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            background: var(--card);
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, #60a5fa, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            color: var(--text-dim);
+            margin-bottom: 2.5rem;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .status-item {
+            background: rgba(15, 23, 42, 0.5);
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-value {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .btn-generate {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 1.25rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: white;
+            background: var(--primary);
+            border: none;
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.4);
+            margin-bottom: 2rem;
+        }
+
+        .btn-generate:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-generate:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-generate:disabled {
+            background: var(--text-dim);
+            cursor: not-allowed;
+            opacity: 0.7;
+            box-shadow: none;
+        }
+
+        .logs {
+            background: #000;
+            color: #10b981;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            height: 150px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.8rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .log-entry {
+            margin-bottom: 0.25rem;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .running .spinner {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="{{ 'running' if status.is_running else '' }}">
+    <div class="container">
+        <h1>Video Studio</h1>
+        <p class="subtitle">Personal YouTube Shorts Automation</p>
+
+        <div class="status-grid">
+            <div class="status-item">
+                <div class="status-label">System Status</div>
+                <div id="is-running" class="status-value">{{ '⏳ Generating...' if status.is_running else '🟢 Idle' }}</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Last Run</div>
+                <div id="last-run" class="status-value">{{ status.last_run }}</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Last Result</div>
+                <div id="last-result" class="status-value">{{ status.last_result }}</div>
+            </div>
+            <div class="status-item">
+                <div class="status-label">Video Queue</div>
+                <div class="status-value">Ready</div>
+            </div>
+        </div>
+
+        <button id="generate-btn" class="btn-generate" onclick="startGeneration()" {{ 'disabled' if status.is_running else '' }}>
+            <div class="spinner"></div>
+            <span id="btn-text">{{ 'Generating Video...' if status.is_running else 'Generate New Video' }}</span>
+        </button>
+
+        <div id="logs" class="logs">
+            {% for log in status.logs %}
+                <div class="log-entry">{{ log }}</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        async function startGeneration() {
+            const btn = document.getElementById('generate-btn');
+            const btnText = document.getElementById('btn-text');
+            const body = document.body;
+
+            btn.disabled = true;
+            btnText.innerText = 'Initializing...';
+            body.classList.add('running');
+
+            try {
+                const response = await fetch('/generate', { method: 'POST' });
+                const data = await response.json();
+                console.log(data);
+            } catch (err) {
+                console.error(err);
+                alert('Error starting generation!');
+                btn.disabled = false;
+                btnText.innerText = 'Generate New Video';
+                body.classList.remove('running');
+            }
+        }
+
+        // Poll for status updates every 2 seconds
+        setInterval(async () => {
+            const response = await fetch('/status');
+            const data = await response.json();
+            
+            document.getElementById('is-running').innerText = data.is_running ? '⏳ Generating...' : '🟢 Idle';
+            document.getElementById('last-run').innerText = data.last_run;
+            document.getElementById('last-result').innerText = data.last_result;
+            
+            const btn = document.getElementById('generate-btn');
+            const btnText = document.getElementById('btn-text');
+            btn.disabled = data.is_running;
+            btnText.innerText = data.is_running ? 'Generating Video...' : 'Generate New Video';
+            
+            if (data.is_running) document.body.classList.add('running');
+            else document.body.classList.remove('running');
+
+            const logDiv = document.getElementById('logs');
+            logDiv.innerHTML = data.logs.map(log => `<div class="log-entry">${log}</div>`).join('');
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }, 2000);
+    </script>
+</body>
+</html>

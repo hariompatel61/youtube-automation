@@ -21,6 +21,19 @@ class EmailTriggerListener:
     def __init__(self):
         self.imap = None
         self.last_check = None
+        self.processed_ids_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "processed_emails.txt")
+        self.processed_ids = self._load_processed_ids()
+
+    def _load_processed_ids(self):
+        if os.path.exists(self.processed_ids_file):
+            with open(self.processed_ids_file, "r") as f:
+                return set(line.strip() for line in f if line.strip())
+        return set()
+
+    def _save_processed_id(self, msg_id):
+        self.processed_ids.add(msg_id)
+        with open(self.processed_ids_file, "a") as f:
+            f.write(f"{msg_id}\n")
 
     def connect(self):
         """Connect to Gmail IMAP."""
@@ -36,8 +49,8 @@ class EmailTriggerListener:
             return False
 
     def check_for_trigger(self):
-        """Check for unread emails with subject 'upload new video'.
-           Returns: True if trigger found, sender_email if found.
+        """Check for emails with subject 'upload new video'.
+           Returns: True if new trigger found, sender_email if found.
         """
         if not self.imap:
             if not self.connect():
@@ -45,27 +58,33 @@ class EmailTriggerListener:
 
         try:
             self.imap.select("INBOX")
-            # Search for unread emails with specific subject
-            status, messages = self.imap.search(None, '(UNSEEN SUBJECT "upload new video")')
+            # Search for emails with specific subject (all, not just unseen)
+            status, messages = self.imap.search(None, '(SUBJECT "upload new video")')
             
             if status != "OK" or not messages[0]:
                 return False, None
 
-            # Process the first matching email
             email_ids = messages[0].split()
-            latest_id = email_ids[-1]
-            
-            # Fetch the email
-            res, msg_data = self.imap.fetch(latest_id, "(RFC822)")
-            for response_part in msg_data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-                    sender = msg.get("From")
-                    return True, sender
+            # Check from newest to oldest
+            for latest_id in reversed(email_ids):
+                latest_id_str = latest_id.decode()
+                
+                if latest_id_str in self.processed_ids:
+                    continue # Already handled
+
+                # Fetch the email
+                res, msg_data = self.imap.fetch(latest_id, "(RFC822)")
+                for response_part in msg_data:
+                    if isinstance(response_part, tuple):
+                        msg = email.message_from_bytes(response_part[1])
+                        sender = msg.get("From")
+                        
+                        # Mark as processed
+                        self._save_processed_id(latest_id_str)
+                        return True, sender
 
         except Exception as e:
             print(f"⚠️ Email check error: {e}")
-            # Reconnect usually fixes socket errors
             self.imap = None 
             
         return False, None
