@@ -15,6 +15,14 @@ import threading
 from dotenv import load_dotenv
 from modules.trigger_listener import EmailTriggerListener
 
+# Fix Windows console encoding for emoji support
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 # Load config
 load_dotenv()
 DAILY_COUNT = int(os.getenv("DAILY_VIDEO_COUNT", "4"))
@@ -191,13 +199,22 @@ def main():
             if next_run:
                 wait_seconds = (next_run - now).total_seconds()
                 logger.info(f"⏳ Next run at {next_run.strftime('%H:%M')} (in {wait_seconds/3600:.1f} hours)")
-                time.sleep(wait_seconds)
                 
-                logger.info(f"🚀 Launching pipeline at {datetime.datetime.now().strftime('%H:%M')}")
-                run_pipeline()
+                # Sleep in chunks to allow interruption
+                while wait_seconds > 0:
+                    sleep_time = min(60, wait_seconds) # Check every minute
+                    time.sleep(sleep_time)
+                    wait_seconds -= sleep_time
+                    # If date changed or reached target time, break
+                    if datetime.date.today() != scheduler.current_date or datetime.datetime.now() >= next_run:
+                        break
                 
-                # Prevent double triggering
-                time.sleep(60)
+                # Check if we still want to run (date might have changed)
+                if datetime.datetime.now() >= next_run and datetime.date.today() == scheduler.current_date:
+                    logger.info(f"🚀 Launching pipeline at {datetime.datetime.now().strftime('%H:%M')}")
+                    run_pipeline()
+                    # Prevent double triggering
+                    time.sleep(60)
             
             else:
                 # No more runs today — wait until tomorrow start hour
