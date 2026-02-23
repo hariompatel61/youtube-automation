@@ -10,3 +10,6 @@ openpyxl>=3.1.0
 numpy>=1.24.0
 requests>=2.31.0
 bytez>=3.0.0
+fastapi>=0.100.0
+uvicorn>=0.20.0
+jinja2>=3.1.0

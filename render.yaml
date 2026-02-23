@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: youtube-automation-studio
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: LLM_PROVIDER
+        sync: false
+      - key: BYTEZ_API_KEY
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASSWORD
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: NOTIFICATION_EMAILS
+        value: "hariiicodez@hmail.com,hariompatel3369@gmail.com"
+      - key: PORT
+        value: "8000"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
