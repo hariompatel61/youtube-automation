@@ -207,7 +207,7 @@ def run_pipeline(args):
         print()
 
     # ═══════════════════════════════════════════════════════════
-    # STEPS 4, 5, 6: PARALLEL — Scenes + Voiceover + Music/SFX
+    # STEPS 4, 5, 6: PARALLEL — Scenes + Voiceover + Music/SFX okkk
     # These three steps are INDEPENDENT and can run at the same time!
     # ═══════════════════════════════════════════════════════════
     parallel_steps = {4, 5, 6} & steps_to_run
