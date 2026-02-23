@@ -1,7 +1,7 @@
 """
 Step 7: Video Editor & Assembler (ULTRA-OPTIMIZED)
 Assembles scene images, voiceover, music, and SFX into the final YouTube Short.
-Compatible with moviepy v2.x
+Compatible with moviepy v2.x okk
 OPTIMIZED: ultrafast preset, all CPU cores, pre-computed zoom, disabled logger.
 """
 

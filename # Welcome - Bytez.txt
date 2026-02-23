@@ -1,0 +1,60 @@
+# Welcome - Bytez
+
+[Skip to main content](https://docs.bytez.com#content-area)
+[Bytez home page](https://docs.bytez.com/)
+- [Discord](https://discord.com/invite/Z723PfCFWf)
+- [Get support](https://discord.com/invite/Z723PfCFWf)
+- [Bytez-com/docs](https://github.com/Bytez-com/docs)
+- [Bytez-com/docs](https://github.com/Bytez-com/docs)
+[Discord](https://discord.com/invite/Z723PfCFWf)
+[Get support](https://discord.com/invite/Z723PfCFWf)
+[Bytez-com/docs](https://github.com/Bytez-com/docs)
+[Bytez-com/docs](https://github.com/Bytez-com/docs)
+[Docs](https://docs.bytez.com/model-api/docs/welcome)
+[HTTP Reference](https://docs.bytez.com/http-reference/overview)
+[Integrations](https://docs.bytez.com/integrations/langchain)
+[API status](https://docs.bytez.com/model-api/docs/status)
+
+##### Model API
+- [Welcome](https://docs.bytez.com/model-api/docs/welcome)
+- [Get started](https://docs.bytez.com/model-api/docs/get-started)
+- Understand the API
+- Open AI Completions
+- Closed Source Params
+- Chat Models
+- Language Models
+- Image Models
+- Video Models
+- Audio Models
+- Multimodal Models
+- [Containers](https://docs.bytez.com/model-api/docs/containers)
+[Welcome](https://docs.bytez.com/model-api/docs/welcome)
+[Get started](https://docs.bytez.com/model-api/docs/get-started)
+[Containers](https://docs.bytez.com/model-api/docs/containers)
+
+# Welcome
+The unified API for 100,000+ AI models
+
+# [​](https://docs.bytez.com#what-kind-of-ai-are-you-looking-for)What kind of AI are you looking for?
+[​](https://docs.bytez.com#what-kind-of-ai-are-you-looking-for)
+
+### [​](https://docs.bytez.com#popular)Popular
+[​](https://docs.bytez.com#popular)
+[ChatMulti-modal models](https://docs.bytez.com/task/chat)
+
+## Chat
+[Image GenerationText-to-image models](https://docs.bytez.com/task/text-to-image)
+
+## Image Generation
+[EmbeddingsTurn your data to vectors](https://docs.bytez.com/task/feature-extraction)
+
+## Embeddings
+
+### [​](https://docs.bytez.com#everything)Everything
+[​](https://docs.bytez.com#everything)
+[Get started](https://docs.bytez.com/model-api/docs/get-started)
+[x](https://x.com/bytez)
+[github](https://github.com/bytez-com)
+[linkedin](https://linkedin.com/company/bytez)
+[discord](https://discord.com/invite/Z723PfCFWf)
+[Powered by](https://www.mintlify.com?utm_campaign=poweredBy&utm_medium=referral&utm_source=bytez)
