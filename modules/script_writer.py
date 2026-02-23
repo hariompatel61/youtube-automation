@@ -161,7 +161,7 @@ Return ONLY valid JSON (no markdown, no code blocks):
                     char_set.add(speaker)
             script["characters"] = list(char_set) or (chars if isinstance(chars, list) else ["Character1", "Character2"])
 
-        # Store the duration in the script for downstream use
+        # Store the duration in the script for downstream usee them
         script["target_duration"] = settings["duration"]
 
         return script
