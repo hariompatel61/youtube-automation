@@ -25,9 +25,8 @@ if sys.platform == "win32":
 
 # Load config
 load_dotenv()
-DAILY_COUNT = int(os.getenv("DAILY_VIDEO_COUNT", "4"))
-START_HOUR = int(os.getenv("SCHEDULE_START_HOUR", "5"))
-END_HOUR = int(os.getenv("SCHEDULE_END_HOUR", "23"))
+DAILY_COUNT = 3  # Fixed to 3 videos per day: 7:00, 13:00, 19:00 IST
+NOTIFICATION_EMAILS = ["hariiicodez@hmail.com", "hariompatel3369@gmail.com"]
 
 # Setup logging
 LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
@@ -52,31 +51,15 @@ class DailyScheduler:
         self.generate_schedule()
 
     def generate_schedule(self):
-        """Generate N random future times for today."""
+        """Generate fixed schedule times: 7 AM, 1 PM, 7 PM IST."""
         self.schedule = []
         now = datetime.datetime.now()
         
-        # Calculate window
-        start_mins = START_HOUR * 60
-        end_mins = END_HOUR * 60
-        window_duration = end_mins - start_mins
-        
-        if window_duration <= 0:
-            logger.error("Invalid schedule window!")
-            return
+        # Fixed hours: 7 AM, 1 PM (13:00), 7 PM (19:00)
+        fixed_hours = [7, 13, 19]
 
-        # Generate unique random minutes
-        try:
-            random_minutes = sorted(random.sample(range(window_duration), DAILY_COUNT))
-        except ValueError:
-             # Window too small for count
-            random_minutes = sorted(random.sample(range(window_duration), min(DAILY_COUNT, window_duration)))
-
-        for m in random_minutes:
-            total_minutes = start_mins + m
-            hour = total_minutes // 60
-            minute = total_minutes % 60
-            scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+        for hour in fixed_hours:
+            scheduled_time = now.replace(hour=hour, minute=0, second=0, microsecond=0)
             self.schedule.append(scheduled_time)
             
         logger.info(f"📅 Daily Schedule for {self.current_date}: {[t.strftime('%H:%M') for t in self.schedule]}")
@@ -99,10 +82,10 @@ class DailyScheduler:
         return None  # No more runs today
 
 
-def run_pipeline():
+def run_pipeline(triggered_by=None):
     """Execute the full YouTube Shorts pipeline with auto-upload."""
     logger.info("=" * 60)
-    logger.info("🎬 Starting Automation Pipeline...")
+    logger.info(f"🎬 Starting Automation Pipeline... {'(Triggered by ' + triggered_by + ')' if triggered_by else ''}")
     logger.info("=" * 60)
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -126,7 +109,32 @@ def run_pipeline():
             for line in result.stderr.strip().split("\n"):
                 logger.warning(f"  {line}")
 
-        if result.returncode == 0:
+        success = (result.returncode == 0)
+        
+        # Send notifications
+        listener = EmailTriggerListener()
+        status_emoji = "✅" if success else "❌"
+        subject = f"YouTube Automation: Video Upload {status_emoji}"
+        
+        # Capture Video ID/Link from stdout if successful
+        video_link = "Check YouTube Channel"
+        if success and "URL: " in result.stdout:
+            for line in result.stdout.split("\n"):
+                if "URL: " in line:
+                    video_link = line.split("URL: ")[1].strip()
+
+        body = f"The pipeline has finished.\n\nStatus: {'SUCCESS' if success else 'FAILED'}\nVideo: {video_link}\n\nTime: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"
+        
+        # 1. Notify the trigger sender if applicable
+        if triggered_by:
+            listener.send_reply(triggered_by, subject, body)
+            
+        # 2. Notify the master notification emails
+        for email_addr in NOTIFICATION_EMAILS:
+            if email_addr != triggered_by: # Avoid double sending
+                listener.send_reply(email_addr, subject, body)
+
+        if success:
             logger.info("✅ Pipeline completed successfully!")
             return True
         else:
@@ -157,12 +165,8 @@ def start_trigger_thread():
                     logger.info(f"📧 Trigger received from {sender}!")
                     listener.send_reply(sender, "Video Generation Started", "I'm on it! Creating a new video now...")
                     
-                    success = run_pipeline()
-                    
-                    if success:
-                        listener.send_reply(sender, "Video Uploaded ✅", "Your video is live! Check the channel.")
-                    else:
-                        listener.send_reply(sender, "Video Failed ❌", "Something went wrong. Check logs.")
+                    # Run pipeline (it will send its own completion email now)
+                    run_pipeline(triggered_by=sender)
                 
             except Exception as e:
                 logger.error(f"Trigger listener error: {e}")
@@ -179,8 +183,7 @@ def main():
     args = parser.parse_args()
 
     logger.info("🕐 Scheduler Started")
-    logger.info(f"   Daily Goal: {DAILY_COUNT} videos")
-    logger.info(f"   Window: {START_HOUR}:00 - {END_HOUR}:00 IST (Local Time)")
+    logger.info(f"   Daily Goal: {DAILY_COUNT} videos (Fixed at 7:00, 13:00, 19:00)")
 
     # Start email trigger listener
     start_trigger_thread()
@@ -217,9 +220,9 @@ def main():
                     time.sleep(60)
             
             else:
-                # No more runs today — wait until tomorrow start hour
+                # No more runs today — wait until tomorrow morning 7 AM
                 tomorrow = now + datetime.timedelta(days=1)
-                next_start = tomorrow.replace(hour=START_HOUR, minute=0, second=0, microsecond=0)
+                next_start = tomorrow.replace(hour=7, minute=0, second=0, microsecond=0)
                 wait_seconds = (next_start - now).total_seconds()
                 
                 logger.info(f"💤 All tasks done for today. Sleeping until {next_start.strftime('%Y-%m-%d %H:%M')}")
