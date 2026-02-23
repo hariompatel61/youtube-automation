@@ -118,7 +118,7 @@ def run_pipeline(triggered_by=None):
         
         # Capture Video ID/Link from stdout if successful
         video_link = "Check YouTube Channel"
-        if success and "URL: " in result.stdout:
+        if success and result.stdout and "URL: " in result.stdout:
             for line in result.stdout.split("\n"):
                 if "URL: " in line:
                     video_link = line.split("URL: ")[1].strip()
