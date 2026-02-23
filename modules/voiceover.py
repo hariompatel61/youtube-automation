@@ -50,7 +50,14 @@ class VoiceoverGenerator:
             str: Path to the generated MP3 file, or None if no dialogue.
         """
         dialogue = scene.get("dialogue", "")
-        if not dialogue or dialogue.strip() == "":
+        if isinstance(dialogue, list):
+            dialogue = " ".join(str(d) for d in dialogue if d).strip()
+        elif isinstance(dialogue, str):
+            dialogue = dialogue.strip()
+        else:
+            dialogue = ""
+
+        if not dialogue:
             return None
 
         speaker = scene.get("speaker", "NARRATOR")
@@ -102,7 +109,14 @@ class VoiceoverGenerator:
 
         for i, scene in enumerate(storyboard):
             dialogue = scene.get("dialogue", "")
-            if not dialogue or dialogue.strip() == "":
+            if isinstance(dialogue, list):
+                dialogue = " ".join(str(d) for d in dialogue if d).strip()
+            elif isinstance(dialogue, str):
+                dialogue = dialogue.strip()
+            else:
+                dialogue = ""
+
+            if not dialogue:
                 paths.append(None)
                 continue
 
