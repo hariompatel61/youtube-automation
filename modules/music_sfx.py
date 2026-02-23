@@ -68,6 +68,12 @@ class MusicSFXManager:
 
     def _save_wav(self, samples, filepath):
         """Save numpy int16 array as WAV file."""
+        # Ensure minimum duration of 0.5 second to avoid MoviePy errors with very short access
+        min_samples = int(self.SAMPLE_RATE * 0.5)
+        if len(samples) < min_samples:
+            padding = np.zeros(min_samples - len(samples), dtype=np.int16)
+            samples = np.concatenate([samples, padding])
+
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         arr = np.clip(samples, -32768, 32767).astype(np.int16)
         with wave.open(filepath, "w") as wav_file:

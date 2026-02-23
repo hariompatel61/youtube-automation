@@ -229,8 +229,13 @@ def run_pipeline(args):
             # Step 4: Scene Generation
             if 4 in steps_to_run:
                 def _gen_scenes():
-                    from modules.scene_generator import SceneGenerator
-                    scene_gen = SceneGenerator()
+                    if Config.IMAGE_PROVIDER == "pollinations":
+                        from modules.ai_scene_generator import AISceneGenerator
+                        scene_gen = AISceneGenerator()
+                    else:
+                        from modules.scene_generator import SceneGenerator
+                        scene_gen = SceneGenerator()
+                        
                     scenes_dir = os.path.join(run_dir, "scenes")
                     return scene_gen.generate_all_scenes(storyboard, scenes_dir)
                 futures[executor.submit(_gen_scenes)] = "scenes"
@@ -495,6 +500,7 @@ def _test_imports():
         ("modules.script_writer", "ScriptWriter"),
         ("modules.storyboard", "StoryboardCreator"),
         ("modules.scene_generator", "SceneGenerator"),
+        ("modules.ai_scene_generator", "AISceneGenerator"),
         ("modules.voiceover", "VoiceoverGenerator"),
         ("modules.music_sfx", "MusicSFXManager"),
         ("modules.video_editor", "VideoEditor"),

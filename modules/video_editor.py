@@ -140,7 +140,7 @@ class VideoEditor:
             codec="libx264",
             audio_codec="aac",
             preset="ultrafast",       # Fastest encoding preset
-            threads=cpu_count,        # Use all CPU cores
+            threads=1,                # Single thread to avoid deadlocks
             bitrate="2000k",          # Reasonable for Shorts
             logger=None,              # Suppress verbose output
             ffmpeg_params=[

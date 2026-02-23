@@ -54,7 +54,7 @@ class YouTubeUploader:
                     Config.BASE_DIR, Config.YOUTUBE_CLIENT_SECRET_FILE
                 )
                 if not os.path.exists(client_secret_path):
-                    print(f"\n❌ YouTube client secret file not found: {client_secret_path}")
+                    print(f"\n[Error] YouTube client secret file not found: {client_secret_path}")
                     print("   Download it from Google Cloud Console > APIs > Credentials")
                     print("   Save as 'client_secret.json' in the project root.\n")
                     return False
@@ -112,9 +112,9 @@ class YouTubeUploader:
                 if scheduled_dt > datetime.datetime.now(datetime.timezone.utc):
                     body["status"]["privacyStatus"] = "private"
                     body["status"]["publishAt"] = scheduled_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    print(f"   📅 Scheduled for: {body['status']['publishAt']}")
+                    print(f"   [Schedule] Scheduled for: {body['status']['publishAt']}")
                 else:
-                    print("   ℹ️  Schedule time is in the past, publishing immediately")
+                    print("   [Info] Schedule time is in the past, publishing immediately")
             except (ValueError, TypeError):
                 # Not a valid full datetime — publish immediately
                 pass
@@ -127,7 +127,7 @@ class YouTubeUploader:
             chunksize=10 * 1024 * 1024,  # 10MB chunks
         )
 
-        print(f"\n📤 Uploading video: {metadata.get('title', 'Video')}...")
+        print(f"\n[Upload] Uploading video: {metadata.get('title', 'Video')}...")
 
         request = self.youtube.videos().insert(
             part="snippet,status",
@@ -145,8 +145,8 @@ class YouTubeUploader:
         video_id = response["id"]
         video_url = f"https://www.youtube.com/shorts/{video_id}"
 
-        print(f"✅ Video uploaded! ID: {video_id}")
-        print(f"🔗 URL: {video_url}")
+        print(f"[Success] Video uploaded! ID: {video_id}")
+        print(f"URL: {video_url}")
 
         # Upload thumbnail
         if thumbnail_path and os.path.exists(thumbnail_path):
@@ -175,9 +175,9 @@ class YouTubeUploader:
                 videoId=video_id,
                 media_body=media,
             ).execute()
-            print(f"🖼️  Thumbnail set successfully")
+            print(f"Thumbnail set successfully")
         except Exception as e:
-            print(f"⚠️  Could not set thumbnail: {e}")
+            print(f"Warning: Could not set thumbnail: {e}")
             print("   (Custom thumbnails require a verified YouTube account)")
 
     def _add_to_playlist(self, video_id):
@@ -199,6 +199,6 @@ class YouTubeUploader:
                     }
                 },
             ).execute()
-            print(f"📋 Added to playlist: {Config.PLAYLIST_ID}")
+            print(f"Playlist update: Added to playlist: {Config.PLAYLIST_ID}")
         except Exception as e:
-            print(f"⚠️  Could not add to playlist: {e}")
+            print(f"Warning: Could not add to playlist: {e}")

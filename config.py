@@ -50,6 +50,41 @@ class Config:
     # Resolve LLM_MODEL at module load time
     LLM_MODEL = os.getenv("LLM_MODEL", "")
 
+    # ── Image Generation Settings ─────────────────────────────
+    # Provider: "pollinations" (free AI), "pillow" (simple 2D)
+    IMAGE_PROVIDER = os.getenv("IMAGE_PROVIDER", "pollinations")
+    POLLINATIONS_MODEL = os.getenv("POLLINATIONS_MODEL", "flux")  # flux, turbo
+
+    # High-quality 3D Animation Prompt Template
+    SCENE_PROMPT_TEMPLATE = (
+        "High quality 3D render of {scene_description}. "
+        "Style: Disney Pixar and DreamWorks animated movie, ultra detailed, cinematic lighting, "
+        "volumetric fog, 8k resolution, Unreal Engine 5 render. "
+        "Characters: {characters}. Expression: {expression}. "
+        "Composition: {camera_angle}, vertical 9:16 aspect ratio. "
+        "Colors: vivid, vibrant, studio lighting. "
+        "Negative prompt: low quality, 2d, sketch, drawing, bad anatomy, blurry, watermark, text."
+    )
+
+    # Children's 3D Animated Video Scene Prompt — Pixar/DreamWorks quality
+    CHILDREN_SCENE_PROMPT = (
+        "Ultra high quality 3D render, Pixar animated movie style, "
+        "8K cinematic rendering, Unreal Engine 5 quality, volumetric lighting. "
+        "Scene: {scene_description}. "
+        "Characters: {characters}. Expression: {expression}. Action: {action}. "
+        "Style details: big expressive cartoon eyes, smooth skin, vibrant saturated colors, "
+        "soft subsurface scattering, global illumination, rim lighting, depth of field blur on background. "
+        "Camera: {camera_angle}, vertical 9:16 aspect ratio, centered composition. "
+        "Background: richly detailed, colorful, child-friendly environment. "
+        "Mood: joyful, magical, wonder-filled, safe for kids. "
+        "Negative prompt: adult content, dark, scary, violence, text, watermark, low quality, "
+        "blurry, 2D, flat, sketch, bad anatomy, deformed faces, realistic human."
+    )
+
+    # Child-friendly voice for children's videos (Microsoft edge-tts)
+    CHILDREN_NARRATOR_VOICE = os.getenv("CHILDREN_NARRATOR_VOICE", "en-US-AriaNeural")
+    CHILDREN_CHARACTER_VOICE = os.getenv("CHILDREN_CHARACTER_VOICE", "en-US-GuyNeural")
+
     # ── API Keys ──────────────────────────────────────────────
     YOUTUBE_CLIENT_SECRET_FILE = os.getenv("YOUTUBE_CLIENT_SECRET_FILE", "client_secret.json")
 
