@@ -124,3 +124,4 @@ main.py (orchestrator)
   ├── modules/thumbnail.py          → Pillow
   └── modules/youtube_uploader.py   → YouTube API
 ```
+we need to chill now ❤❤
